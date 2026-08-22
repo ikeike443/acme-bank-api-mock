@@ -1,0 +1,74 @@
+# Acme Bank API
+
+A backend service for Acme Bank's online banking platform. It exposes
+accounts, money transfers, authentication, and notifications behind a small
+REST API.
+
+## Features
+
+- Account lookup (balance, frozen status, daily transfer limit)
+- Money transfers between accounts, with validation for balance, account
+  state, daily limits, and step-up authentication on large transfers
+- Mock authentication (login + step-up verification) for exercising the
+  transfer flow locally
+- In-memory notification events on successful transfers
+
+## Tech stack
+
+- Python 3.12+
+- FastAPI
+- SQLite (in-memory)
+- pytest / pytest-cov
+
+## Local setup
+
+```bash
+pip install -e ".[dev]"
+```
+
+## Running the API
+
+```bash
+uvicorn app.main:app --reload
+```
+
+The service seeds a handful of fictional accounts on startup (see
+`app/database.py`), so you can start making requests immediately:
+
+```bash
+curl http://127.0.0.1:8000/accounts/1
+```
+
+Interactive API docs are available at `http://127.0.0.1:8000/docs` once the
+server is running.
+
+## Running tests
+
+```bash
+pytest
+```
+
+With coverage:
+
+```bash
+pytest --cov=app
+```
+
+## Architecture
+
+The application is organized by domain:
+
+- `app/accounts` — account records and balance mutation
+- `app/auth` — login and step-up authentication (mock)
+- `app/transfers` — transfer validation and execution; the core business
+  logic of the service
+- `app/notifications` — in-memory notification events
+
+See `docs/architecture.md` for more detail and `docs/business-rules.md` for
+the rules governing transfers.
+
+## Data
+
+The service uses an in-memory SQLite database seeded with fictional sample
+accounts. No real customer data, credentials, or external services are
+involved.
