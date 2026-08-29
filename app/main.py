@@ -23,20 +23,19 @@ from app.transfers.service import (
     InvalidAmountError,
     SelfTransferError,
     SourceAccountFrozenError,
+    SourceAccountNotFoundError,
     StepUpAuthenticationRequiredError,
     TransferService,
 )
 
 app = FastAPI(title="Acme Bank API", version="0.1.0")
 
-# Maps transfer-service errors to the HTTP status code they should surface
-# as. Note this does not cover every exception create_transfer can raise
-# (e.g. the source account not existing) -- those fall through to a
-# generic 500.
+# Maps transfer-service errors to the HTTP status code they should surface as.
 _TRANSFER_ERROR_STATUS = {
     InvalidAmountError: 422,
     SelfTransferError: 422,
     SourceAccountFrozenError: 403,
+    SourceAccountNotFoundError: 404,
     DestinationAccountNotFoundError: 404,
     InsufficientBalanceError: 422,
     DailyLimitExceededError: 422,
