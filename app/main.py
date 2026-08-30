@@ -1,7 +1,11 @@
 """FastAPI application entrypoint for the Acme Bank API."""
 from __future__ import annotations
 
-from fastapi import FastAPI, HTTPException
+from pathlib import Path
+
+from fastapi import FastAPI, Header, HTTPException
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.accounts.service import AccountNotFoundError, AccountService
 from app.auth.service import AuthService, InvalidCredentialsError
@@ -28,12 +32,11 @@ from app.transfers.service import (
 )
 
 app = FastAPI(title="Acme Bank API", version="0.1.0")
+STATIC_DIR = Path(__file__).parent / "static"
 
-# Maps transfer-service errors to the HTTP status code they should surface
-# as. Note this does not cover every exception create_transfer can raise
-# (e.g. the source account not existing) -- those fall through to a
-# generic 500.
+# Maps transfer-service errors to the HTTP status code they should surface as.
 _TRANSFER_ERROR_STATUS = {
+    AccountNotFoundError: 404,
     InvalidAmountError: 422,
     SelfTransferError: 422,
     SourceAccountFrozenError: 403,
@@ -66,6 +69,23 @@ def _build_services() -> None:
 _build_services()
 
 
+@app.get("/", include_in_schema=False)
+def web_app() -> FileResponse:
+    return FileResponse(STATIC_DIR / "index.html")
+
+
+def _require_authenticated_account(authorization: str | None) -> int:
+    """Return the account represented by a valid Bearer token."""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="authentication required")
+
+    token = authorization.removeprefix("Bearer ").strip()
+    account_id = auth_service.account_for_token(token)
+    if account_id is None:
+        raise HTTPException(status_code=401, detail="invalid or expired token")
+    return account_id
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
@@ -81,17 +101,35 @@ def login(payload: LoginRequest) -> LoginResponse:
 
 
 @app.post("/auth/step-up", response_model=StepUpResponse)
-def request_step_up(payload: StepUpRequest) -> StepUpResponse:
+def request_step_up(
+    payload: StepUpRequest,
+    authorization: str | None = Header(default=None),
+) -> StepUpResponse:
+    authenticated_account_id = _require_authenticated_account(authorization)
+    if payload.account_id != authenticated_account_id:
+        raise HTTPException(
+            status_code=403,
+            detail="step-up authentication is only available for your account",
+        )
     code = auth_service.request_step_up_code(payload.account_id)
     return StepUpResponse(account_id=payload.account_id, code=code)
 
 
 @app.get("/accounts/{account_id}", response_model=AccountResponse)
-def get_account(account_id: int) -> AccountResponse:
+def get_account(
+    account_id: int,
+    authorization: str | None = Header(default=None),
+) -> AccountResponse:
+    authenticated_account_id = _require_authenticated_account(authorization)
     try:
         account = account_service.get_account(account_id)
     except AccountNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+    if account_id != authenticated_account_id:
+        raise HTTPException(
+            status_code=403,
+            detail="accounts can only be viewed by their owner",
+        )
     return AccountResponse(
         id=account.id,
         owner_name=account.owner_name,
@@ -102,7 +140,16 @@ def get_account(account_id: int) -> AccountResponse:
 
 
 @app.post("/transfers", response_model=TransferResponse)
-def create_transfer(payload: TransferRequest) -> TransferResponse:
+def create_transfer(
+    payload: TransferRequest,
+    authorization: str | None = Header(default=None),
+) -> TransferResponse:
+    authenticated_account_id = _require_authenticated_account(authorization)
+    if payload.source_account_id != authenticated_account_id:
+        raise HTTPException(
+            status_code=403,
+            detail="transfers can only be initiated from your account",
+        )
     try:
         transfer = transfer_service.create_transfer(
             source_account_id=payload.source_account_id,
@@ -121,3 +168,6 @@ def create_transfer(payload: TransferRequest) -> TransferResponse:
         status=transfer.status,
         created_at=transfer.created_at,
     )
+
+
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")

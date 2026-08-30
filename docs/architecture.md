@@ -7,6 +7,9 @@ database. It is organized around four domains: accounts, authentication,
 transfers, and notifications. Each domain owns a `service.py` module that
 holds its business logic; the API layer (`app/main.py`) is a thin
 translation between HTTP and those services.
+- Account and transfer endpoints require the token in an
+  `Authorization: Bearer <token>` header, and only allow the authenticated
+  account to view its balance or initiate transfers.
 
 ```text
               +-------------------+

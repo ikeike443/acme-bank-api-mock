@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Acme Bank | Online Banking</title>
+    <link rel="stylesheet" href="/static/styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="/">
+          <span class="brand-mark" aria-hidden="true">A</span>
+          <span>
+            <strong>Acme Bank</strong>
+            <small>Online Banking</small>
+          </span>
+        </a>
+        <span class="environment-badge">SANDBOX</span>
+      </header>
+
+      <main>
+        <section id="login-panel" class="panel login-panel">
+          <div class="eyebrow">WELCOME BACK</div>
+          <h1>安全な銀行体験を、<br><em>シンプルに。</em></h1>
+          <p class="muted">サンプル口座にログインして、残高確認や送金をお試しください。</p>
+          <form id="login-form">
+            <label for="account-id">口座番号</label>
+            <input id="account-id" name="account_id" type="number" value="1" min="1" required>
+            <label for="pin">暗証番号</label>
+            <input id="pin" name="pin" type="password" inputmode="numeric" value="1234" required>
+            <button class="primary-button" type="submit">ログインする <span aria-hidden="true">→</span></button>
+          </form>
+          <p id="login-error" class="message error" role="alert" hidden></p>
+          <p class="demo-hint">デモ口座: 口座番号 1 / 暗証番号 1234</p>
+        </section>
+
+        <section id="dashboard" hidden>
+          <div class="dashboard-heading">
+            <div>
+              <div class="eyebrow">ACCOUNT OVERVIEW</div>
+              <h1>こんにちは、<span id="account-name">—</span>さん</h1>
+            </div>
+            <button id="logout-button" class="text-button" type="button">ログアウト</button>
+          </div>
+
+          <div class="balance-card">
+            <div>
+              <span class="card-label">利用可能残高</span>
+              <strong id="account-balance" data-testid="account-balance">—</strong>
+            </div>
+            <span id="account-status" class="status-pill">確認中</span>
+          </div>
+
+          <div class="content-grid">
+            <section class="panel transfer-panel">
+              <div class="section-heading">
+                <div>
+                  <div class="eyebrow">QUICK TRANSFER</div>
+                  <h2>かんたん送金</h2>
+                </div>
+                <span class="section-icon" aria-hidden="true">↗</span>
+              </div>
+              <p class="muted">送金先と金額を入力してください。50万円以上の送金には追加認証が必要です。</p>
+              <form id="transfer-form">
+                <label for="destination-id">送金先口座</label>
+                <input id="destination-id" name="destination_account_id" type="number" value="2" min="1" required>
+                <label for="amount">送金額 <span class="input-suffix">JPY</span></label>
+                <div class="amount-input">
+                  <span>¥</span>
+                  <input id="amount" name="amount" type="number" min="1" step="1" placeholder="例: 10000" required>
+                </div>
+                <div id="step-up-area" class="step-up-area" hidden>
+                  <div class="step-up-header">
+                    <label for="step-up-code">追加認証コード</label>
+                    <button id="request-code-button" class="text-button" type="button">コードを発行</button>
+                  </div>
+                  <input id="step-up-code" name="step_up_code" type="text" inputmode="numeric" placeholder="6桁のコード">
+                  <p id="step-up-hint" class="help-text">高額送金には追加認証が必要です。</p>
+                </div>
+                <button id="transfer-button" class="primary-button" type="submit">送金する <span aria-hidden="true">→</span></button>
+              </form>
+              <p id="transfer-message" class="message" role="status" hidden></p>
+            </section>
+
+            <aside class="panel security-panel">
+              <div class="security-icon" aria-hidden="true">✓</div>
+              <h2>安心のサンドボックス</h2>
+              <p class="muted">これは開発用のデモ環境です。表示される口座や残高はすべて架空のデータです。</p>
+              <div class="security-rule"></div>
+              <div class="security-detail"><span>Daily limit</span><strong id="daily-limit">—</strong></div>
+            </aside>
+          </div>
+        </section>
+      </main>
+
+      <footer>Acme Bank API Mock <span>•</span> Built for local development</footer>
+    </div>
+    <script src="/static/app.js"></script>
+  </body>
+</html>

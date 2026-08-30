@@ -32,6 +32,20 @@ pip install -e ".[dev]"
 uvicorn app.main:app --reload
 ```
 
+The local web UI is available at `http://127.0.0.1:8000/`. It provides a
+small login, account overview, and transfer flow backed by the same API.
+
+### Dashboard overview
+
+After login, the dashboard gives the account owner a focused view of their
+available balance, account status, daily transfer limit, and quick transfer
+form. Successful transfers refresh the balance and show an in-context
+confirmation message. The UI is intentionally small and sandbox-oriented,
+making it useful for trying the API flow locally without a separate frontend
+build.
+
+![Acme Bank dashboard after a successful transfer](docs/ui/transfer-success.png)
+
 The service seeds a handful of fictional accounts on startup (see
 `app/database.py`), so you can start making requests immediately:
 
@@ -53,6 +67,17 @@ With coverage:
 ```bash
 pytest --cov=app
 ```
+
+Browser E2E tests:
+
+```bash
+python -m playwright install chromium
+pytest tests/e2e
+```
+
+Set `E2E_HEADFUL=1` to run the browser test with a visible browser window.
+Each run writes screenshots and browser videos under `test-results/ui/`.
+Set `E2E_ARTIFACTS_DIR` to change the output directory.
 
 ## Architecture
 
