@@ -12,6 +12,7 @@ from app.transfers.service import (
     InvalidAmountError,
     SelfTransferError,
     SourceAccountFrozenError,
+    SourceAccountNotFoundError,
     StepUpAuthenticationRequiredError,
     TransferService,
 )
@@ -112,9 +113,8 @@ def test_nonexistent_destination_raises_destination_not_found(transfer_service):
         transfer_service.create_transfer(1, 999, 10_000)
 
 
-def test_nonexistent_source_raises_account_not_found(transfer_service):
-    # Current behaviour: the source lookup raises the accounts-domain error.
-    with pytest.raises(AccountNotFoundError):
+def test_nonexistent_source_raises_source_not_found(transfer_service):
+    with pytest.raises(SourceAccountNotFoundError):
         transfer_service.create_transfer(999, 1, 10_000)
 
 

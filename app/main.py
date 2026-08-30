@@ -27,6 +27,7 @@ from app.transfers.service import (
     InvalidAmountError,
     SelfTransferError,
     SourceAccountFrozenError,
+    SourceAccountNotFoundError,
     StepUpAuthenticationRequiredError,
     TransferService,
 )
@@ -40,6 +41,7 @@ _TRANSFER_ERROR_STATUS = {
     InvalidAmountError: 422,
     SelfTransferError: 422,
     SourceAccountFrozenError: 403,
+    SourceAccountNotFoundError: 404,
     DestinationAccountNotFoundError: 404,
     InsufficientBalanceError: 422,
     DailyLimitExceededError: 422,

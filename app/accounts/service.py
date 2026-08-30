@@ -53,7 +53,7 @@ class AccountService:
             return False
         return True
 
-    def adjust_balance(self, account_id: int, delta: int) -> None:
+    def adjust_balance(self, account_id: int, delta: int, *, commit: bool = True) -> None:
         """Apply a signed delta to an account's balance.
 
         This does not re-check that the resulting balance is valid; callers
@@ -64,4 +64,5 @@ class AccountService:
             "UPDATE accounts SET balance = balance + ? WHERE id = ?",
             (delta, account_id),
         )
-        self._conn.commit()
+        if commit:
+            self._conn.commit()

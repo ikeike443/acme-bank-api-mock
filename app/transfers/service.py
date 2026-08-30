@@ -37,6 +37,10 @@ class SourceAccountFrozenError(TransferError):
     """Raised when the source account is frozen."""
 
 
+class SourceAccountNotFoundError(TransferError):
+    """Raised when the source account does not exist."""
+
+
 class DestinationAccountNotFoundError(TransferError):
     """Raised when the destination account does not exist."""
 
@@ -89,7 +93,12 @@ class TransferService:
         if source_account_id == destination_account_id:
             raise SelfTransferError("an account cannot transfer to itself")
 
-        source = self.accounts.get_account(source_account_id)
+        try:
+            source = self.accounts.get_account(source_account_id)
+        except AccountNotFoundError as exc:
+            raise SourceAccountNotFoundError(
+                f"source account {source_account_id} does not exist"
+            ) from exc
 
         if source.is_frozen:
             raise SourceAccountFrozenError(
@@ -123,23 +132,27 @@ class TransferService:
                     "additional authentication"
                 )
 
-        self.accounts.adjust_balance(source_account_id, -amount)
-        self.accounts.adjust_balance(destination_account_id, amount)
-
         created_at = datetime.now(timezone.utc).isoformat()
-        cursor = self._conn.execute(
-            "INSERT INTO transfers "
-            "(source_account_id, destination_account_id, amount, status, created_at) "
-            "VALUES (?, ?, ?, ?, ?)",
-            (
-                source_account_id,
-                destination_account_id,
-                amount,
-                "completed",
-                created_at,
-            ),
-        )
-        self._conn.commit()
+        try:
+            self._conn.execute("BEGIN")
+            self.accounts.adjust_balance(source_account_id, -amount, commit=False)
+            self.accounts.adjust_balance(destination_account_id, amount, commit=False)
+            cursor = self._conn.execute(
+                "INSERT INTO transfers "
+                "(source_account_id, destination_account_id, amount, status, created_at) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (
+                    source_account_id,
+                    destination_account_id,
+                    amount,
+                    "completed",
+                    created_at,
+                ),
+            )
+            self._conn.commit()
+        except Exception:
+            self._conn.rollback()
+            raise
 
         self.notifications.notify(
             source_account_id,
