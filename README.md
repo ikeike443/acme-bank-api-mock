@@ -35,7 +35,16 @@ uvicorn app.main:app --reload
 The local web UI is available at `http://127.0.0.1:8000/`. It provides a
 small login, account overview, and transfer flow backed by the same API.
 
-![Transfer success screen](docs/ui/transfer-success.png)
+### Dashboard overview
+
+After login, the dashboard gives the account owner a focused view of their
+available balance, account status, daily transfer limit, and quick transfer
+form. Successful transfers refresh the balance and show an in-context
+confirmation message. The UI is intentionally small and sandbox-oriented,
+making it useful for trying the API flow locally without a separate frontend
+build.
+
+![Acme Bank dashboard after a successful transfer](docs/ui/transfer-success.png)
 
 The service seeds a handful of fictional accounts on startup (see
 `app/database.py`), so you can start making requests immediately:
