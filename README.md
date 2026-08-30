@@ -35,6 +35,8 @@ uvicorn app.main:app --reload
 The local web UI is available at `http://127.0.0.1:8000/`. It provides a
 small login, account overview, and transfer flow backed by the same API.
 
+![Transfer success screen](docs/ui/transfer-success.png)
+
 The service seeds a handful of fictional accounts on startup (see
 `app/database.py`), so you can start making requests immediately:
 
@@ -65,6 +67,8 @@ pytest tests/e2e
 ```
 
 Set `E2E_HEADFUL=1` to run the browser test with a visible browser window.
+Each run writes screenshots and browser videos under `test-results/ui/`.
+Set `E2E_ARTIFACTS_DIR` to change the output directory.
 
 ## Architecture
 

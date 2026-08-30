@@ -18,7 +18,16 @@ jobs:
       - name: Install browser
         run: python -m playwright install --with-deps chromium
       - name: Run tests with coverage
-        run: python -m pytest --cov=app --cov-report=term-missing | tee coverage.txt
+        run: |
+          set -o pipefail
+          python -m pytest --cov=app --cov-report=term-missing | tee coverage.txt
+      - name: Upload E2E artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-artifacts
+          path: test-results/
+          if-no-files-found: ignore
       - name: Add coverage report to job summary
         if: always()
         run: |

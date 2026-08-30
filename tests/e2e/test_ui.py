@@ -54,6 +54,8 @@ def api_server() -> Iterator[str]:
 
 def test_user_can_log_in_and_complete_a_transfer(api_server: str) -> None:
     headless = os.getenv("E2E_HEADFUL", "").lower() not in {"1", "true", "yes"}
+    artifact_dir = Path(os.getenv("E2E_ARTIFACTS_DIR", "test-results")) / "ui"
+    artifact_dir.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as playwright:
         launch_options = {
             "headless": headless,
@@ -63,20 +65,23 @@ def test_user_can_log_in_and_complete_a_transfer(api_server: str) -> None:
         if local_chrome.exists():
             launch_options["executable_path"] = str(local_chrome)
         browser = playwright.chromium.launch(**launch_options)
-        page: Page = browser.new_page()
-        page.goto(api_server, wait_until="networkidle")
-
-        expect(
-            page.get_by_role(
-                "heading",
-                name=re.compile(r"安全な銀行体験を、\s*シンプルに。"),
-            )
-        ).to_be_visible()
-        page.get_by_label("口座番号").fill("1")
-        page.get_by_label("暗証番号").fill("1234")
-        page.get_by_role("button", name="ログインする").click()
-
+        context = browser.new_context(
+            record_video_dir=str(artifact_dir / "videos"),
+        )
+        page: Page = context.new_page()
         try:
+            page.goto(api_server, wait_until="networkidle")
+
+            expect(
+                page.get_by_role(
+                    "heading",
+                    name=re.compile(r"安全な銀行体験を、\s*シンプルに。"),
+                )
+            ).to_be_visible()
+            page.get_by_label("口座番号").fill("1")
+            page.get_by_label("暗証番号").fill("1234")
+            page.get_by_role("button", name="ログインする").click()
+
             expect(page.get_by_text("こんにちは、Alice Tanakaさん")).to_be_visible()
             expect(page.get_by_test_id("account-balance")).to_have_text("￥2,000,000")
 
@@ -85,5 +90,16 @@ def test_user_can_log_in_and_complete_a_transfer(api_server: str) -> None:
 
             expect(page.get_by_role("status")).to_have_text("￥10,000の送金が完了しました。")
             expect(page.get_by_test_id("account-balance")).to_have_text("￥1,990,000")
+            page.screenshot(
+                path=str(artifact_dir / "transfer-success.png"),
+                full_page=True,
+            )
+        except Exception:
+            page.screenshot(
+                path=str(artifact_dir / "transfer-failure.png"),
+                full_page=True,
+            )
+            raise
         finally:
+            context.close()
             browser.close()
