@@ -12,3 +12,9 @@ def test_login_with_wrong_pin_is_rejected(client):
     response = client.post("/auth/login", json={"account_id": 1, "pin": "0000"})
 
     assert response.status_code == 401
+
+
+def test_step_up_requires_authentication(client):
+    response = client.post("/auth/step-up", json={"account_id": 1})
+
+    assert response.status_code == 401

@@ -32,6 +32,9 @@ pip install -e ".[dev]"
 uvicorn app.main:app --reload
 ```
 
+The local web UI is available at `http://127.0.0.1:8000/`. It provides a
+small login, account overview, and transfer flow backed by the same API.
+
 The service seeds a handful of fictional accounts on startup (see
 `app/database.py`), so you can start making requests immediately:
 
@@ -53,6 +56,15 @@ With coverage:
 ```bash
 pytest --cov=app
 ```
+
+Browser E2E tests:
+
+```bash
+python -m playwright install chromium
+pytest tests/e2e
+```
+
+Set `E2E_HEADFUL=1` to run the browser test with a visible browser window.
 
 ## Architecture
 
