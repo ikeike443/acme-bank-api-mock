@@ -97,3 +97,5 @@ the rules governing transfers.
 The service uses an in-memory SQLite database seeded with fictional sample
 accounts. No real customer data, credentials, or external services are
 involved.
+
+これはテストでぬ
